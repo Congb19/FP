@@ -2,7 +2,7 @@
 
 ### 简介
 
-Flappy Bird的重置版Flappy Pipe，可能有恶搞内容植入
+Flappy Bird的仿制版Flappy Pipe，可能有恶搞内容植入
 
 采用Android SDK版本23
 

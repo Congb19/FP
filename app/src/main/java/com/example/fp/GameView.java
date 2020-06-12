@@ -9,12 +9,9 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Paint.FontMetrics;
 import android.graphics.PixelFormat;
 import android.graphics.RectF;
-import android.graphics.Typeface;
 import android.os.SystemClock;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
@@ -25,201 +22,164 @@ import android.view.SurfaceView;
 import com.example.fp.GameButton.OnButtonClickListener;
 import com.example.tools.BitmapUtil;
 import com.example.tools.UITools;
-import com.example.tools.Logger;
 import android.util.Log;
 
+// 游戏主程序
 public class GameView extends SurfaceView implements Callback, Runnable {
     private SurfaceHolder mHolder;
-    // private Thread mThread;
     private ExecutorService mPool;
     private Canvas mCanvas;
-    private boolean isRunnging;//状态
+    private boolean isRunnging; //状态
 
-    // 二.设置背景
+    // ---背景---
     private Bitmap mBgBitmap;
-    //当前View的尺寸
     private int mWidth;
     private int mHeight;
     private RectF mGamePanelRect = new RectF();
-    // 三、设置鸟
+
+    // ---鸟---
     private Bird mBird;
     private Bitmap mBirdBitmap;
 
-    // 四、添加地板
+    // ---地板---
     private Floor mFloor;
     private Bitmap mFloorBitmap;
-    // 五、添加管道
-    /** 管道的宽度 60dp */
-    private static final int PIPE_WIDTH = 60;
-    private Pipe mPipe;
-    /** 上管道的图片 */
-    private Bitmap mPipeTopBitmap;
-    /** 下管道的图片 */
-    private Bitmap mPipeBotBitmap;
-    /** 管道的宽度 */
-    private int mPipeWidth;
-    /** 管道矩阵 */
-    private RectF mPipeRectF;
-    /** 管道集合 */
-    private List<Pipe> mPipeList;
-    /** 管道移动的速度 */
-    private int mSpeed = UITools.dip2px(getContext(), 5);
 
-    // 六、添加分数
-    /** 分数 */
+    // ---管道---
+    private static final int PIPE_WIDTH = 60; // 管道的宽度 dp
+    private Pipe mPipe;
+    private Bitmap mPipeTopBitmap; // 上管道的图片
+    private Bitmap mPipeBotBitmap; // 下管道的图片
+    private int mPipeWidth; // 管道的宽度
+    private RectF mPipeRectF; // 管道矩阵
+    private List<Pipe> mPipeList; // 管道集合
+    private int mSpeed = UITools.dip2px(getContext(), 5); // 管道移动的速度 px
+
+    // ---分数---
     private final int[] mNums = new int[] { R.drawable.n0, R.drawable.n1, R.drawable.n2, R.drawable.n3, R.drawable.n4, R.drawable.n5,
             R.drawable.n6, R.drawable.n7, R.drawable.n8, R.drawable.n9 };
     private Grade mGrade;
-    /** 分数图片组 */
-    private Bitmap[] mNumBitmap;
-    /** 分值 */
-    private int mScore = 100;
-    /** 单个数字的高度的1/15 */
-    private static final float RADIO_SINGLE_NUM_HEIGHT = 1 / 15f;
-    /** 单个数字的宽度 */
-    private int mSingleGradeWidth;
-    /** 单个数字的高度 */
-    private int mSingleGradeHeight;
-    /** 单个数字的范围 */
-    private RectF mSingleNumRectF;
+    private Bitmap[] mNumBitmap;// 分数图片组
+    private int mScore = 100;//分值
+    private static final float RADIO_SINGLE_NUM_HEIGHT = 1 / 15f;// 单个数字的高度的1/15
+    private int mSingleGradeWidth;// 单个数字的宽度
+    private int mSingleGradeHeight;// 单个数字的高度
+    private RectF mSingleNumRectF;// 单个数字的范围
 
-    // --七、添加游戏的状态-------------------------------------------------------------------------
-    /** 刚进入游戏时是等待静止的状态 */
-    private GameStatus mStatus = GameStatus.WAITING;
-
+    // ---游戏状态---
     private enum GameStatus {
         WAITING, RUNNING, OVER
     }
+    private GameStatus mStatus = GameStatus.WAITING;
 
-    /** 触摸上升的距离，因为是上升，所以为负值 */
-    private static final int TOUCH_UP_SIZE = -16;
-    /** 将上升的距离转化为px；这里多存储一个变量，变量在run中计算 */
-    private final int mBirdUpDis = UITools.dip2px(getContext(), TOUCH_UP_SIZE);
-    /** 跳跃的时候的临时距离 */
-    private int mTmpBirdDis;
+    private static final int TOUCH_UP_SIZE = -20; //触摸上升的距离 dp
+    private final int mBirdUpDis = UITools.dip2px(getContext(), TOUCH_UP_SIZE); //触摸上升的距离 px
+    private int mTmpBirdDis;// 跳跃的时候的临时距离
 
-    // --八、按钮----------------------------------------
+    // ---按钮---
     private GameButton mStart;
     private Bitmap mStartBitmap;
     private Bitmap mStartPressBitmap;// 开始按下图片
 
     private GameButton mRestart;
     private Bitmap mRestartBitmap;
-    private Bitmap mRestartPressBitmap;// 从新开始按下图片
+    private Bitmap mRestartPressBitmap;// 重新开始按下图片
 
-    // --九、游戏中的变量---------------------------
-    /** 两个管道间距离 **/
-    private final int PIPE_DIS_BETWEEN_TWO = UITools.dip2px(getContext(), 300);
-    /** 鸟自动下落的距离 */
-    private final int mAutoDownSpeed = UITools.dip2px(getContext(), 2);
-    //private Handler mHandler = new Handler();
+    // ---游戏中的变量---
+    private final int PIPE_DIS_BETWEEN_TWO = UITools.dip2px(getContext(), 150);// 两个管道间距离
+    private final int mAutoDownSpeed = UITools.dip2px(getContext(), 2);// 鸟自动下落的距离
 
+    // ---工具函数们---
+    // 根据resId加载图片
+    private Bitmap loadImageByResId(int resId) {
+        Log.i("to get img", "!!!");
+        return BitmapFactory.decodeResource(getResources(), resId);
+    }
 
-
-    // ----构造函数处理---------------------------------------------
+    // ---构造函数处理---
     public GameView(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
         init();
     }
-
     public GameView(Context context) {
         this(context, null);
         init();
     }
-
     public GameView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         init();
     }
 
+    //---初始化---
     private void init() {
-        // -初始化holder-----------------------
+        // 初始化holder
         mHolder = getHolder();
         mHolder.addCallback(this);
         setZOrderOnTop(true);
         // 设置画布 背景透明
         mHolder.setFormat(PixelFormat.TRANSLUCENT);
-
-        // --焦点设置----------------------------
+        // 焦点设置
         setFocusable(true);
         // 设置触屏
         setFocusableInTouchMode(true);
         // 设置常亮
         setKeepScreenOn(true);
-
-        // --背景设置--------------------------------
+        // 背景设置
         mGamePanelRect = new RectF();
         mBgBitmap = loadImageByResId(R.drawable.bg1);
-
-        // --添加鸟的图片---
+        // 添加鸟的图片
         mBirdBitmap = loadImageByResId(R.drawable.b1);
-        // --添加地板---
+        // 添加地板图片
         mFloorBitmap = loadImageByResId(R.drawable.floor_bg2);
-        // --管道的宽度初始化--
+        // 初始化管道的宽度
         mPipeWidth = UITools.dip2px(getContext(), PIPE_WIDTH);
-        // --添加管道图片--
+        // 添加管道图片
         mPipeTopBitmap = loadImageByResId(R.drawable.g2);
         mPipeBotBitmap = loadImageByResId(R.drawable.g1);
         mPipeList = new ArrayList<Pipe>();
-
-        // -------------------------------------------------------
-
-        // 初始化分数图片
+        // 添加分数图片
         mNumBitmap = new Bitmap[mNums.length];
         for (int i = 0; i < mNums.length; i++) {
             mNumBitmap[i] = loadImageByResId(mNums[i]);
         }
-
-        // ---初始化按钮图片-------------------------------------
-        mStartBitmap = BitmapUtil.getImageFromAssetsFile(getContext(), "start.png");
+        // 添加按钮图片
+        mStartBitmap = BitmapUtil.getImageFromAssetsFile(getContext(), "start1.png");
         mStartPressBitmap = BitmapUtil.getImageFromAssetsFile(getContext(), "start2.png");
         mRestartBitmap = BitmapUtil.getImageFromAssetsFile(getContext(), "restart1.png");
         mRestartPressBitmap = BitmapUtil.getImageFromAssetsFile(getContext(), "restart2.png");
-
     }
-
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-
         mWidth = w;
         mHeight = h;
         mGamePanelRect.set(0, 0, w, h);
-
         // 初始化鸟
         mBird = new Bird(getContext(), mBirdBitmap, mWidth, mHeight);
         // 初始化地板
         mFloor = new Floor(mWidth, mHeight, mFloorBitmap);
-
         // 初始化管道范围
         mPipeRectF = new RectF(0, 0, mPipeWidth, mHeight);
-        // 初始化 管道
-        mPipe = new Pipe(getContext(), mWidth, mHeight, mPipeTopBitmap, mPipeBotBitmap);
-        mPipeList.add(mPipe);
-
         // 初始化分数
         mSingleGradeHeight = (int) (h * RADIO_SINGLE_NUM_HEIGHT);// 屏幕的1/15
         mSingleGradeWidth = (int) (mNumBitmap[0].getWidth() * (1.0f * mSingleGradeHeight / mNumBitmap[0].getHeight()));
         mSingleNumRectF = new RectF(0, 0, mSingleGradeWidth, mSingleGradeHeight);
         mGrade = new Grade(mNumBitmap, mSingleNumRectF, mSingleGradeWidth, mWidth, mHeight);
-
         // 初始化按钮
         mStart = new GameButton(mStartBitmap, mStartPressBitmap, mWidth, mHeight);
-        // 从新开始按钮
+        // 重新开始按钮
         mRestart = new GameButton(mRestartBitmap, mRestartPressBitmap, mWidth, mHeight);
-//
         if (mStatus == GameStatus.WAITING && mStart != null) {
             ObjectAnimator anim = ObjectAnimator.ofInt(mStart, "Y", mHeight, mHeight / 2);
             anim.setDuration(2000);
             anim.start();
         }
-
         // 添加事件
         mStart.setOnButtonClickListener(new OnButtonClickListener() {
             @Override
             public void click() {
                 if (mStatus == GameStatus.WAITING) {
-                    // 按下的时候，游戏进入运行状态
+                    // 按下 游戏状态进入运行
                     mStatus = GameStatus.RUNNING;
                 }
             }
@@ -227,24 +187,20 @@ public class GameView extends SurfaceView implements Callback, Runnable {
         mRestart.setOnButtonClickListener(new OnButtonClickListener() {
             @Override
             public void click() {
+                // 按下 游戏状态重新进入等待
                 mStatus = GameStatus.WAITING;
                 resetBirdStatus();
             }
         });
-
     }
 
-
-    // ---初始化结束 ----------------------------------------------------------
-
-    // --处理触碰事件------------------------------------------------------------------------
+    // ---处理触碰事件---
     private int mDownX = 0;
     private int mDownY = 0;
-
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:// 按下
+            case MotionEvent.ACTION_DOWN:
                 mDownX = (int) event.getX();
                 mDownY = (int) event.getY();
                 if (mStatus == GameStatus.WAITING) {
@@ -271,10 +227,10 @@ public class GameView extends SurfaceView implements Callback, Runnable {
                     }
                 }
                 break;
-            case MotionEvent.ACTION_MOVE:// 移动
+            case MotionEvent.ACTION_MOVE:
                 break;
             case MotionEvent.ACTION_CANCEL:
-            case MotionEvent.ACTION_UP: // 抬起
+            case MotionEvent.ACTION_UP:
                 if (mStart != null) {
                     mStart.setClick(false);
                 }
@@ -283,7 +239,6 @@ public class GameView extends SurfaceView implements Callback, Runnable {
                 }
                 break;
         }
-
         return true;
     }
 
@@ -294,54 +249,39 @@ public class GameView extends SurfaceView implements Callback, Runnable {
         mTmpBirdDis = 0;
     }
 
-
-
-
-    // --处理逻辑事物------------------------------------------------------------------------
-    /** 记录要移除的管道 为什么不用CopyOnWriteArrayList，因为其是线程安全的 */
-    private List<Pipe> mNeedRemovePipe = new ArrayList<Pipe>();
-    /** 记录要移动的距离 */
-    private int mTmpMoveDistance = 0;
-    /** 记录要移除的管的个数 */
-    private int mRemovedPipe = 0;
-
-    /**
-     * 处理逻辑事物
-     */
+    // ---处理逻辑们---
+    private List<Pipe> mNeedRemovePipe = new ArrayList<Pipe>();// 记录要移除的管道
+    private int mTmpMoveDistance = 0; // 记录要移动的距离
+    private int mRemovedPipe = 0; // 记录要移除的管的个数
+    // 主进程逻辑
     private void logic() {
         switch (mStatus) {
-            case WAITING:// 刚进入游戏的状态
-
+            case WAITING:
                 break;
-            case RUNNING:// 正在玩的状态]
+            case RUNNING:
                 mScore = 0;
-
-                // ---.移动地板-----------
+                // 移动地板
                 mFloor.setX(mFloor.getX() - mSpeed);
-
-                // ---不断移动管道--------
+                // 移动管道
                 logicPipe();
-
-                // ----处理鸟逻辑----
+                // 鸟重力下落
+                // 著名公式Δs=vΔt
                 mTmpBirdDis += mAutoDownSpeed;
                 mBird.setY(mBird.getY() + mTmpBirdDis);
-
-                // ---处理分数---
+                // 分数更新
                 mScore += mRemovedPipe;
                 for (Pipe pipe : mPipeList) {
                     if (pipe.getX() + mPipeWidth < mBird.getX()) {
                         mScore++;
                     }
                 }
-
-                // ----判断游戏是否结束----
+                // 检查游戏结束
                 checkGameOver();
-
                 break;
-
-            case OVER:// 鸟落下
-                // 如果鸟还在空中，先让它掉下来
+            case OVER:
+                // 鸟如果撞的是管子，就落下
                 if (mBird.getY() < mFloor.getY() - mBird.getHeight()) {
+                    // 著名公式Δs=vΔt
                     mTmpBirdDis += mAutoDownSpeed;
                     mBird.setY(mBird.getY() + mTmpBirdDis);
                 } else {
@@ -351,10 +291,7 @@ public class GameView extends SurfaceView implements Callback, Runnable {
                 break;
         }
     }
-
-    /**
-     * 重置鸟的位置等数据
-     */
+    // 重新初始化
     private void clearAndInit() {
         // 清除生成的管道
         mPipeList.clear();
@@ -365,14 +302,11 @@ public class GameView extends SurfaceView implements Callback, Runnable {
         // 管道的个数
         mRemovedPipe = 0;
     }
-
-    /**
-     * 处理管道逻辑
-     */
+    // 管道逻辑
     private void logicPipe() {
-        // 1.遍历所有的管道
+        // 遍历所有的管道
         for (Pipe pipe : mPipeList) {
-            // 2.如果管子已经在屏幕外
+            // 如果管子已经在屏幕外
             if (pipe.getX() < -mPipeWidth) {
                 mNeedRemovePipe.add(pipe);
                 mRemovedPipe++;
@@ -380,27 +314,24 @@ public class GameView extends SurfaceView implements Callback, Runnable {
             }
             pipe.setX(pipe.getX() - mSpeed);
         }
-        // 3.移除管道
+        // 移除管道
         mPipeList.removeAll(mNeedRemovePipe);
-        // 4.记录移动距离
+        // 记录移动距离
         mTmpMoveDistance += mSpeed;
-        // 5.生成一个管道
+        // 生成一个管道
         if (mTmpMoveDistance >= PIPE_DIS_BETWEEN_TWO) {
             Pipe pipe = new Pipe(getContext(), getWidth(), getHeight(), mPipeTopBitmap, mPipeBotBitmap);
             mPipeList.add(pipe);
             mTmpMoveDistance = 0;
         }
     }
-
-    /**
-     * 判断游戏是否结束
-     */
+    // 游戏结束检测逻辑
     private void checkGameOver() {
-        // 判断小鸟是否触碰到了地板
+        // 判断鸟是否触碰到地板
         if (mBird.getY() > mFloor.getY() - mBird.getHeight()) {
             mStatus = GameStatus.OVER;
         }
-        // 判断是否触碰到了管道
+        // 判断是否触碰到管道
         for (Pipe pipe : mPipeList) {
             // 已经穿过的
             if (pipe.getX() + mPipeWidth < mBird.getX()) {
@@ -412,32 +343,29 @@ public class GameView extends SurfaceView implements Callback, Runnable {
                 break;
             }
         }
-
     }
 
-
-
-    // ---游戏引擎------------------------------------------------------------
-
+    // ---游戏引擎---
     @Override
     public void run() {
         while (isRunnging) {
             long start = System.currentTimeMillis();
+            logic();
             draw();
             long end = System.currentTimeMillis();
-            if (start - end < 50) {
-                SystemClock.sleep(50 - (start - end));
+            //更新速率（也就是最高帧率）
+            long fps = 45;
+            if (start - end < 1000/fps) {
+                SystemClock.sleep(1000/fps - (start - end));
             }
         }
     }
-
+    // ---绘制函数们---
+    // 绘制主程序
     private void draw() {
         try {
-            Logger.i("bird", "mHolder==" + mHolder);
             if (mHolder != null) {
                 mCanvas = mHolder.lockCanvas();
-                Logger.i("bird", "mCanvas==" + mCanvas);
-
                 if (mCanvas != null) {
                     drawBg();//绘制背景
                     drawBird();// 绘制鸟
@@ -451,7 +379,7 @@ public class GameView extends SurfaceView implements Callback, Runnable {
                         drawPipes();// 绘制管道
                     }
                     if (mStatus == GameStatus.OVER) {
-                        drawGameOver();
+//                        drawGameOver();
                         drawRestart();
                     }
                 }
@@ -464,75 +392,47 @@ public class GameView extends SurfaceView implements Callback, Runnable {
             }
         }
     }
-
-    private FontMetrics fm;
-    private int mTextHeight = 0;// 游戏结束时文本的高度
-
-    private void drawGameOver() {
-        String mGameOver = "GAME OVER";
-        Typeface typeface = Typeface.createFromAsset(getContext().getAssets(), "BRITANIC.TTF");
-        Paint paint = new Paint();
-        paint.setAntiAlias(true); // 是否抗锯齿
-        paint.setTypeface(typeface);
-        paint.setStrokeWidth(3);
-        paint.setColor(Color.RED);
-        paint.setTextSize(50);
-        // paint.setShader(shader);//设置字体
-        paint.setShadowLayer(5, 3, 3, 0xFFFF00FF);// 设置阴影
-        paint.setTextAlign(Paint.Align.CENTER);
-        // paint.setStyle(Paint.Style.STROKE); //空心
-        paint.setStyle(Paint.Style.FILL); // 实心
-        paint.setDither(true);
-        fm = paint.getFontMetrics();
-        mTextHeight = (int) (Math.ceil(fm.descent - fm.ascent) + UITools.dip2px(getContext(), 4));
-        mCanvas.drawText(mGameOver, mWidth / 2, mHeight / 2, paint);
-    }
-
-
-    /**
-     * 绘制开始按钮
-     */
+    private int mTextHeight = 0; // 游戏结束时文本的高度
+    // 绘制开始按钮
     private void drawStart() {
         mStart.draw(mCanvas);
     }
-    /**
-     * 绘制重新开始按钮
-     */
+    // 绘制重新开始按钮
     private void drawRestart() {
         mRestart.setY(mHeight/2 + mTextHeight);
         mRestart.draw(mCanvas);
-
     }
-    /**
-     * 绘制分数
-     */
+    // 绘制分数
     private void drawGrades() {
         mGrade.draw(mCanvas, mScore);
     }
+    // 绘制地板
     private void drawFloor() {
         Paint paint = new Paint();
         paint.setAntiAlias(true);
         paint.setDither(true);
         mFloor.draw(mCanvas, paint);
-        // 更新我们地板绘制的x坐标
+        // 更新地板的x坐标
         mFloor.setX(mFloor.getX() - mSpeed);
     }
+    // 绘制鸟
     private void drawBird() {
         mBird.draw(mCanvas);
     }
+    // 绘制背景
     private void drawBg() {
         mCanvas.drawBitmap(mBgBitmap, null, mGamePanelRect, null);
     }
+    // 绘制管道
     private void drawPipes() {
         for (Pipe pipe : mPipeList) {
-            // 先设定x坐标
+            // 设定x坐标
             pipe.setX(pipe.getX() - mSpeed);
             pipe.draw(mCanvas, mPipeRectF);
         }
     }
 
-
-    // ---callback监听------------------------------------------------------
+    // ---回调们---
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         // -线程处理--------------------------
@@ -540,28 +440,13 @@ public class GameView extends SurfaceView implements Callback, Runnable {
         mPool = Executors.newFixedThreadPool(5);
         mPool.execute(this);
     }
-
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
 
     }
-
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
         // 通知关闭线程
         isRunnging = false;
-    }
-
-
-
-    /**
-     * 根据resId加载图片
-     *
-     * @param resId
-     * @return
-     */
-    private Bitmap loadImageByResId(int resId) {
-        Log.v("to get img", "!!!");
-        return BitmapFactory.decodeResource(getResources(), resId);
     }
 }

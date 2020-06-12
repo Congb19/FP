@@ -6,19 +6,11 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.RectF;
 
-/**
- * 管道实体
- * 
- * @Project App_View
- * @Package com.android.view.flybird
- * @author chenlin
- * @version 1.0
- * @Date 2014年5月7日
- */
+// 管道
 public class Pipe {
 	private static final float RADIO_BETWEEN_UP_DOWN = 1 / 5F;// 上下管道间的距离
-	private static final float RADIO_MAX_HEIGHT = 2 / 5F;// 上管道的最大高度
-	private static final float RADIO_MIN_HEIGHT = 1 / 5F;// 上管道的最小高度
+	private static final float RADIO_MAX_HEIGHT = 2.5F / 5F;// 上管道的最大高度
+	private static final float RADIO_MIN_HEIGHT = 1F / 5F;// 上管道的最小高度
 	private int x;// 管道x坐标
 	private int mTopHeight;// 上管道高度
 	private int mMargin;// 上下管道的距离
@@ -32,18 +24,13 @@ public class Pipe {
 		x = gameWidth;
 		mTopBitmap = topBitmap;
 		mBottomBitmap = bottomBitmap;
-		
 		// 高度随机
 		randomHeight(gameHeight);
 	}
-	/**
-	 * 随机生成一个高度
-	 */
 	private void randomHeight(int gameHeight) {
 		mTopHeight = random.nextInt((int) (gameHeight * (RADIO_MAX_HEIGHT - RADIO_MIN_HEIGHT)));
 		mTopHeight = (int) (mTopHeight + gameHeight * RADIO_MIN_HEIGHT);
 	}
-
 	public void draw(Canvas canvas, RectF rect) {
 		canvas.save();
 		// rect为整个管道，假设完整管道为100，需要绘制20，则向上偏移80 rect.bottom管的实际高度
@@ -57,31 +44,17 @@ public class Pipe {
 		canvas.drawBitmap(mBottomBitmap, null, rect, null);
 		canvas.restore();
 	}
-	
-	/**
-	 * 判断和鸟是否触碰
-	 * @param bird
-	 * @return
-	 */
+	// 碰撞检测
 	public boolean touchBird(Bird bird){
-		/**
-		 * 如果bird已经触碰到管道
-		 */
 		if (bird.getX() + bird.getWidth() > x && (bird.getY() < mTopHeight || bird.getY() + bird.getHeight() > mTopHeight + mMargin)) {
 			return true;
 		}
 		return false;
 	}
-
 	public int getX() {
 		return x;
 	}
-
 	public void setX(int x) {
 		this.x = x;
 	}
-	
-
-	
-
 }

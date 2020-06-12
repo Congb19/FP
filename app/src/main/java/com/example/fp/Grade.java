@@ -4,15 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.RectF;
 
-/**
- * 分数
- * 
- * @Project App_View
- * @Package com.android.view.flybird
- * @author chenlin
- * @version 1.0
- * @Date 2016年5月16日
- */
+// 分数
 public class Grade {
 	private Bitmap[] mNumBitmap;//所有分数的图片集合
 	private RectF mSingleNumRectF;//单个分数的矩阵
@@ -27,16 +19,9 @@ public class Grade {
 		this.mGameWidth = gameWidth;
 		this.mGameHeight = gameHeight;
 	}
-
-	/**
-	 * 绘制
-	 * 
-	 *
-	 */
 	public void draw(Canvas canvas, int score) {
 		String grade = score + "";
 		canvas.save();
-//		canvas.save(Canvas.MATRIX_SAVE_FLAG);
 		//移动屏幕的中间，1/8的高度
 		canvas.translate(mGameWidth / 2 - grade.length() * mSingleGradeWidth / 2, 1f / 8 * mGameHeight);
 		// 依次绘制分数

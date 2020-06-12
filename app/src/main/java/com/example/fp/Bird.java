@@ -16,29 +16,21 @@ public class Bird {
 	private int x, y;// 所在坐标
 	private int mGameHeight;
 
-	//鸟的构造函数 Bird()
 	public Bird(Context context, Bitmap bitmap, int gameWidth, int gameHeight) {
 		this.mBirdBitmap = bitmap;
 		this.mWidth = UITools.dip2px(context, BIRD_SIZE);
 		this.mHeight = (int) (mWidth * 1.0f / bitmap.getWidth() * bitmap.getHeight());
 		// 给坐标赋值
-		this.x = gameWidth / 2 - bitmap.getWidth() / 2;
+		this.x = gameWidth / 3 - bitmap.getWidth() / 2;
 		this.y = (int) (gameHeight * RADIO_POS_HEIGHT);
 		this.mBirdRectF = new RectF();
 		
 		this.mGameHeight = gameHeight;
 	}
-
-	/**
-	 * 绘制鸟
-	 * 
-	 * @param canvas
-	 */
 	public void draw(Canvas canvas) {
 		mBirdRectF.set(x, y, x + mWidth, y + mHeight);
 		canvas.drawBitmap(mBirdBitmap, null, mBirdRectF, null);
 	}
-
 	public void resetHeight() {
 		y = (int) (mGameHeight * RADIO_POS_HEIGHT);
 	}
