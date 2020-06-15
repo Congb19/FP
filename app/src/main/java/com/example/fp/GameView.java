@@ -46,7 +46,7 @@ public class GameView extends SurfaceView implements Callback, Runnable {
     private Bitmap mFloorBitmap;
 
     // ---管道---
-    private static final int PIPE_WIDTH = 60; // 管道的宽度 dp
+    private static final int PIPE_WIDTH = 90; // 管道的宽度 dp
     private Pipe mPipe;
     private Bitmap mPipeTopBitmap; // 上管道的图片
     private Bitmap mPipeBotBitmap; // 下管道的图片
@@ -128,14 +128,14 @@ public class GameView extends SurfaceView implements Callback, Runnable {
         mGamePanelRect = new RectF();
         mBgBitmap = loadImageByResId(R.drawable.bg1);
         // 添加鸟的图片
-        mBirdBitmap = loadImageByResId(R.drawable.b1);
+        mBirdBitmap = loadImageByResId(R.drawable.b2);
         // 添加地板图片
         mFloorBitmap = loadImageByResId(R.drawable.floor_bg2);
         // 初始化管道的宽度
         mPipeWidth = UITools.dip2px(getContext(), PIPE_WIDTH);
         // 添加管道图片
-        mPipeTopBitmap = loadImageByResId(R.drawable.g2);
-        mPipeBotBitmap = loadImageByResId(R.drawable.g1);
+        mPipeTopBitmap = loadImageByResId(R.drawable.g4);
+        mPipeBotBitmap = loadImageByResId(R.drawable.g3);
         mPipeList = new ArrayList<Pipe>();
         // 添加分数图片
         mNumBitmap = new Bitmap[mNums.length];

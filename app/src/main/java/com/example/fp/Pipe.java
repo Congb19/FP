@@ -37,7 +37,7 @@ public class Pipe {
 		canvas.translate(x, -(rect.bottom - mTopHeight));
 		// 绘制上管道
 		canvas.drawBitmap(mTopBitmap, null, rect, null);
-		// 下管道，偏移量为，上管道高度+margin
+		// 下管道，偏移量为上管道高度+margin
 		canvas.translate(0, rect.bottom + mMargin);
 		//canvas.translate(0, mTopHeight + mMargin);
 		//绘制下管道
